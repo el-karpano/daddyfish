@@ -1,0 +1,8 @@
+fastapi
+uvicorn[standard]
+aiogram
+supabase
+python-dotenv
+python-multipart
+httpx
+Pillow
