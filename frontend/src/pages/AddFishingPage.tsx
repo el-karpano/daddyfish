@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../api'
-import { mapStyle } from '../mapStyle'
+import { mapStyle, BARANOVICHI } from '../mapStyle'
 
 const FISH_LIST = [
   'Щука', 'Окунь', 'Судак', 'Сом', 'Карп', 'Карась', 'Лещ', 'Плотва',
@@ -49,7 +49,7 @@ export default function AddFishingPage() {
 
   const initMap = async () => {
     const maplibregl = await import('maplibre-gl')
-    const center: [number, number] = [lng || 30.5, lat || 55.5]
+    const center: [number, number] = [lng || BARANOVICHI[0], lat || BARANOVICHI[1]]
     const map = new maplibregl.Map({
       container: mapRef.current!,
       style: mapStyle,

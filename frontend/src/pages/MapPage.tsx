@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../api'
-import { mapStyle } from '../mapStyle'
+import { mapStyle, BARANOVICHI } from '../mapStyle'
 
 export default function MapPage() {
   const navigate = useNavigate()
@@ -22,7 +22,7 @@ export default function MapPage() {
       map = new maplibregl.Map({
         container: mapRef.current!,
         style: mapStyle,
-        center: markers.length > 0 ? [markers[0].longitude, markers[0].latitude] : [30.5, 55.5],
+        center: markers.length > 0 ? [markers[0].longitude, markers[0].latitude] : BARANOVICHI,
         zoom: markers.length > 0 ? 6 : 5,
       })
 
