@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../api'
+import { mapStyle } from '../mapStyle'
 
 const FISH_LIST = [
   'Щука', 'Окунь', 'Судак', 'Сом', 'Карп', 'Карась', 'Лещ', 'Плотва',
@@ -51,7 +52,7 @@ export default function AddFishingPage() {
     const center: [number, number] = [lng || 30.5, lat || 55.5]
     const map = new maplibregl.Map({
       container: mapRef.current!,
-      style: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
+      style: mapStyle,
       center,
       zoom: 6,
     })

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { api } from '../api'
+import { mapStyle } from '../mapStyle'
 
 export default function DetailPage() {
   const { id } = useParams()
@@ -23,7 +24,7 @@ export default function DetailPage() {
       const maplibregl = mod
       map = new maplibregl.Map({
         container: mapRef.current!,
-        style: 'https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json',
+        style: mapStyle,
         center: [record.longitude, record.latitude],
         zoom: 10,
         interactive: false,
