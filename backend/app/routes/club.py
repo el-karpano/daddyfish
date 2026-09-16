@@ -41,7 +41,9 @@ def create_invite(user: dict = Depends(get_club_member)):
         raise HTTPException(status_code=403, detail="Only owner can create invites")
 
     token = create_or_reactivate_invite(club["id"], user["id"])
-    return {"token": token}
+    from ..config import BOT_USERNAME
+    link = f"https://t.me/{BOT_USERNAME}?start=invite_{token}" if BOT_USERNAME else f"invite_{token}"
+    return {"token": token, "link": link}
 
 
 @router.delete("/members/{member_id}")

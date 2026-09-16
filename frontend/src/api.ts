@@ -31,7 +31,7 @@ export const api = {
   // Club
   getClub: () => request<any>('/api/club'),
   getClubMembers: () => request<any[]>('/api/club/members'),
-  createInvite: () => request<{ token: string }>('/api/club/invite', { method: 'POST' }),
+  createInvite: () => request<{ token: string; link: string }>('/api/club/invite', { method: 'POST' }),
   removeMember: (memberId: number) =>
     request<any>(`/api/club/members/${memberId}`, { method: 'DELETE' }),
 

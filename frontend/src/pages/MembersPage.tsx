@@ -28,9 +28,7 @@ export default function MembersPage() {
   const handleInvite = async () => {
     try {
       const resp = await api.createInvite()
-      const botUsername = (window as any).Telegram?.WebApp?.initDataUnsafe?.user?.username
-      const link = `https://t.me/${botUsername || 'YOUR_BOT'}?start=invite_${resp.token}`
-      setInviteLink(link)
+      setInviteLink(resp.link)
       setShowInvite(true)
     } catch {}
   }
