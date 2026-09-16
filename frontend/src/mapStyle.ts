@@ -1,6 +1,6 @@
 export const mapStyle: any = {
   version: 8,
-  name: 'Fish Map Dark',
+  name: 'Fish Map',
   sources: {
     'osm': {
       type: 'raster',
@@ -14,13 +14,7 @@ export const mapStyle: any = {
     {
       id: 'osm',
       type: 'raster',
-      source: 'osm',
-      paint: {
-        'raster-saturation': -0.3,
-        'raster-brightness-min': 0.55,
-        'raster-brightness-max': 0.85,
-        'raster-contrast': 0.1
-      }
+      source: 'osm'
     }
   ]
 }
