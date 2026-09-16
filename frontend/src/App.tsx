@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, NavLink, useLocation } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, NavLink, useLocation, useNavigate } from 'react-router-dom'
 import HomePage from './pages/HomePage'
 import MapPage from './pages/MapPage'
 import HistoryPage from './pages/HistoryPage'
@@ -8,22 +8,30 @@ import EditPage from './pages/EditPage'
 import StatsPage from './pages/StatsPage'
 import AchievementsPage from './pages/AchievementsPage'
 import ProfilePage from './pages/ProfilePage'
+import { Home, MapPin, Fish, User, Plus } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
+
+function NavItem({ to, icon: Icon, label }: { to: string; icon: LucideIcon; label: string }) {
+  return (
+    <NavLink to={to} end={to === '/'} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+      <Icon size={22} strokeWidth={1.8} />
+      <span>{label}</span>
+    </NavLink>
+  )
+}
 
 function BottomNav() {
-  const items = [
-    { to: '/', icon: '🏠', label: 'Главная' },
-    { to: '/map', icon: '🗺', label: 'Карта' },
-    { to: '/history', icon: '🎣', label: 'Рыбалки' },
-    { to: '/profile', icon: '👤', label: 'Профиль' },
-  ]
+  const navigate = useNavigate()
+
   return (
     <nav className="bottom-nav">
-      {items.map(i => (
-        <NavLink key={i.to} to={i.to} end={i.to === '/'} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
-          <span className="nav-item-icon">{i.icon}</span>
-          <span>{i.label}</span>
-        </NavLink>
-      ))}
+      <NavItem to="/" icon={Home} label="Главная" />
+      <NavItem to="/history" icon={Fish} label="Рыбалки" />
+      <button className="nav-add-btn" onClick={() => navigate('/add')}>
+        <Plus size={24} strokeWidth={2.5} />
+      </button>
+      <NavItem to="/map" icon={MapPin} label="Места" />
+      <NavItem to="/profile" icon={User} label="Профиль" />
     </nav>
   )
 }

@@ -2,6 +2,10 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../api'
 import { mapStyle, BARANOVICHI } from '../mapStyle'
+import {
+  ArrowLeft, MapPin, Calendar, Anchor, MessageSquare,
+  Camera, Plus, X, Check, Weight
+} from 'lucide-react'
 
 const FISH_LIST = [
   'Щука', 'Окунь', 'Судак', 'Сом', 'Карп', 'Карась', 'Лещ', 'Плотва',
@@ -16,27 +20,22 @@ export default function AddFishingPage() {
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
-  // Step 0: date
   const [date, setDate] = useState(new Date().toISOString().split('T')[0])
 
-  // Step 1: map picker
   const [lat, setLat] = useState<number | null>(null)
   const [lng, setLng] = useState<number | null>(null)
   const mapRef = useRef<HTMLDivElement>(null)
   const mapInstanceRef = useRef<any>(null)
   const markerRef = useRef<any>(null)
 
-  // Step 2: info
   const [waterBody, setWaterBody] = useState('')
   const [placeDesc, setPlaceDesc] = useState('')
 
-  // Step 3: catch
   const [catches, setCatchRows] = useState<CatchRow[]>([
     { fish_name: '', custom_name: '', quantity: '', biggest_weight: '' }
   ])
   const [totalWeight, setTotalWeight] = useState('')
 
-  // Step 4: comment + photos
   const [comment, setComment] = useState('')
   const [photos, setPhotos] = useState<File[]>([])
   const [photoPreviews, setPhotoPreviews] = useState<string[]>([])
@@ -63,7 +62,7 @@ export default function AddFishingPage() {
       if (markerRef.current) {
         markerRef.current.setLngLat([lo, la])
       } else {
-        markerRef.current = new maplibregl.Marker({ color: '#2ecc71' })
+        markerRef.current = new maplibregl.Marker({ color: '#20D879' })
           .setLngLat([lo, la])
           .addTo(map)
       }
@@ -147,11 +146,21 @@ export default function AddFishingPage() {
     return true
   }
 
+  const stepTitles = [
+    'Где рыбачили?',
+    'Выберите место',
+    'Расскажите о рыбалке',
+    'Что поймали?',
+    'Сохраните момент',
+  ]
+
   return (
     <div className="page">
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
-        <button className="btn-icon" onClick={() => step > 0 ? setStep(step - 1) : navigate(-1)}>←</button>
-        <h2 className="page-title" style={{ marginBottom: 0, flex: 1 }}>Новая рыбалка</h2>
+      <div className="back-header">
+        <button className="btn-icon" onClick={() => step > 0 ? setStep(step - 1) : navigate(-1)}>
+          <ArrowLeft size={20} />
+        </button>
+        <h1 className="back-header-title">{stepTitles[step] || 'Новая рыбалка'}</h1>
       </div>
 
       <div className="step-indicator">
@@ -160,56 +169,69 @@ export default function AddFishingPage() {
         ))}
       </div>
 
+      {/* STEP 0 — Date */}
       {step === 0 && (
         <div>
           <div className="input-group">
-            <label className="input-label">📅 Дата рыбалки</label>
+            <label className="input-label">
+              <Calendar size={14} style={{ marginRight: 6, verticalAlign: -2 }} /> Дата рыбалки
+            </label>
             <input className="input" type="date" value={date} onChange={e => setDate(e.target.value)} />
           </div>
           <div className="btn-group">
-            <button className="btn btn-primary" disabled={!canNext()} onClick={() => setStep(1)}>Далее →</button>
-          </div>
-        </div>
-      )}
-
-      {step === 1 && (
-        <div>
-          <p style={{ fontSize: 14, color: 'var(--text-dim)', marginBottom: 12 }}>
-            Нажмите на карту, чтобы выбрать место рыбалки
-          </p>
-          <div ref={mapRef} className="map-container" style={{ height: 350 }} />
-          {lat !== null && lng !== null && (
-            <p style={{ fontSize: 13, color: 'var(--accent)', marginBottom: 12 }}>
-              📍 {lat.toFixed(5)}, {lng.toFixed(5)}
-            </p>
-          )}
-          <div className="btn-group">
-            <button className="btn btn-primary" disabled={!canNext()} onClick={() => setStep(2)}>
-              ✓ Выбрать это место
+            <button className="btn btn-primary" disabled={!canNext()} onClick={() => setStep(1)}>
+              Далее <span style={{ marginLeft: 4 }}>→</span>
             </button>
           </div>
         </div>
       )}
 
-      {step === 2 && (
+      {/* STEP 1 — Map */}
+      {step === 1 && (
         <div>
-          <div className="input-group">
-            <label className="input-label">🌊 Название водоёма</label>
-            <input className="input" placeholder="Например: Двина" value={waterBody} onChange={e => setWaterBody(e.target.value)} />
-          </div>
-          <div className="input-group">
-            <label className="input-label">📍 Описание места (необязательно)</label>
-            <textarea className="input" placeholder="Например: стоял возле камыша, глубина около 3 метров" value={placeDesc} onChange={e => setPlaceDesc(e.target.value)} />
-          </div>
+          <p style={{ fontSize: 14, color: 'var(--text-secondary)', marginBottom: 14 }}>
+            Нажмите на карту, чтобы отметить место рыбалки
+          </p>
+          <div ref={mapRef} className="map-container" style={{ height: 350 }} />
+          {lat !== null && lng !== null && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14, fontSize: 13, color: 'var(--accent)' }}>
+              <MapPin size={14} /> {lat.toFixed(5)}, {lng.toFixed(5)}
+            </div>
+          )}
           <div className="btn-group">
-            <button className="btn btn-primary" disabled={!canNext()} onClick={() => setStep(3)}>Далее →</button>
+            <button className="btn btn-primary" disabled={!canNext()} onClick={() => setStep(2)}>
+              <Check size={18} /> Выбрать это место
+            </button>
           </div>
         </div>
       )}
 
+      {/* STEP 2 — Info */}
+      {step === 2 && (
+        <div>
+          <div className="input-group">
+            <label className="input-label">
+              <Anchor size={14} style={{ marginRight: 6, verticalAlign: -2 }} /> Название водоёма
+            </label>
+            <input className="input" placeholder="Например: Селецкое озеро" value={waterBody} onChange={e => setWaterBody(e.target.value)} />
+          </div>
+          <div className="input-group">
+            <label className="input-label">
+              <MapPin size={14} style={{ marginRight: 6, verticalAlign: -2 }} /> Описание места
+            </label>
+            <textarea className="input" placeholder="Например: стоял возле камыша, глубина около 3 метров" value={placeDesc} onChange={e => setPlaceDesc(e.target.value)} />
+          </div>
+          <div className="btn-group">
+            <button className="btn btn-primary" disabled={!canNext()} onClick={() => setStep(3)}>
+              Далее <span style={{ marginLeft: 4 }}>→</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* STEP 3 — Catch */}
       {step === 3 && (
         <div>
-          <h3 style={{ fontSize: 16, marginBottom: 14 }}>🐟 Улов</h3>
           {catches.map((c, i) => (
             <div key={i} className="catch-row">
               <div className="input-group" style={{ marginBottom: 0 }}>
@@ -227,7 +249,9 @@ export default function AddFishingPage() {
                 <label className="input-label">Вес (кг)</label>
                 <input className="input" type="number" step="0.1" min="0" placeholder="—" value={c.biggest_weight} onChange={e => updateCatch(i, 'biggest_weight', e.target.value)} />
               </div>
-              <button className="btn-icon" style={{ marginBottom: 0 }} onClick={() => removeCatch(i)}>✕</button>
+              <button className="btn-icon" style={{ marginBottom: 0 }} onClick={() => removeCatch(i)}>
+                <X size={16} />
+              </button>
             </div>
           ))}
 
@@ -241,47 +265,62 @@ export default function AddFishingPage() {
             </div>
           )}
 
-          <button className="btn btn-secondary" onClick={addCatch} style={{ marginBottom: 16 }}>+ Добавить рыбу</button>
-
-          <div className="input-group">
-            <label className="input-label">⚖️ Общий вес улова (кг, необязательно)</label>
-            <input className="input" type="number" step="0.1" min="0" placeholder="Например: 6.4" value={totalWeight} onChange={e => setTotalWeight(e.target.value)} />
-          </div>
+          <button className="btn btn-ghost" onClick={addCatch} style={{ marginBottom: 16, width: 'auto', alignSelf: 'flex-start' }}>
+            <Plus size={16} /> Добавить рыбу
+          </button>
 
           <div className="btn-group">
-            <button className="btn btn-primary" onClick={() => setStep(4)}>Далее →</button>
+            <button className="btn btn-primary" onClick={() => setStep(4)}>
+              Далее <span style={{ marginLeft: 4 }}>→</span>
+            </button>
           </div>
         </div>
       )}
 
+      {/* STEP 4 — Comment + Photos */}
       {step === 4 && (
         <div>
           <div className="input-group">
-            <label className="input-label">📝 Комментарий (необязательно)</label>
+            <label className="input-label">
+              <MessageSquare size={14} style={{ marginRight: 6, verticalAlign: -2 }} /> Комментарий
+            </label>
             <textarea className="input" placeholder="Приехал в 6 утра. Клевало хорошо..." value={comment} onChange={e => setComment(e.target.value)} />
           </div>
 
           <div className="input-group">
-            <label className="input-label">📸 Фотографии (до 10)</label>
+            <label className="input-label">
+              <Camera size={14} style={{ marginRight: 6, verticalAlign: -2 }} /> Фотографии (до 10)
+            </label>
             <div className="photo-grid">
               {photoPreviews.map((p, i) => (
                 <div key={i} className="photo-item">
                   <img src={p} alt="" />
-                  <button className="photo-delete" onClick={() => removePhoto(i)}>✕</button>
+                  <button className="photo-delete" onClick={() => removePhoto(i)}>
+                    <X size={12} />
+                  </button>
                 </div>
               ))}
               {photos.length < 10 && (
-                <div className="photo-add" onClick={() => fileRef.current?.click()}>+</div>
+                <div className="photo-add" onClick={() => fileRef.current?.click()}>
+                  <Camera size={24} />
+                </div>
               )}
             </div>
             <input ref={fileRef} type="file" accept="image/*" multiple hidden onChange={handlePhotos} />
           </div>
 
+          <div className="input-group">
+            <label className="input-label">
+              <Weight size={14} style={{ marginRight: 6, verticalAlign: -2 }} /> Общий вес улова (кг)
+            </label>
+            <input className="input" type="number" step="0.1" min="0" placeholder="Например: 6.4" value={totalWeight} onChange={e => setTotalWeight(e.target.value)} />
+          </div>
+
           {error && <p style={{ color: 'var(--danger)', fontSize: 14, marginBottom: 12 }}>{error}</p>}
 
           <div className="btn-group">
-            <button className="btn btn-primary" onClick={save} disabled={saving}>
-              {saving ? 'Сохранение...' : '✓ Сохранить рыбалку'}
+            <button className="btn btn-primary" onClick={save} disabled={saving} style={{ fontSize: 16, padding: '16px 20px' }}>
+              {saving ? 'Сохранение...' : 'Сохранить рыбалку'}
             </button>
           </div>
         </div>

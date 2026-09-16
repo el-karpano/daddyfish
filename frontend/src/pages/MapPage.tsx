@@ -2,12 +2,16 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { api } from '../api'
 import { mapStyle, BARANOVICHI } from '../mapStyle'
+import {
+  MapPin, Fish, Trophy, X, ChevronRight, Navigation, Anchor
+} from 'lucide-react'
 
 export default function MapPage() {
   const navigate = useNavigate()
   const mapRef = useRef<HTMLDivElement>(null)
   const [loading, setLoading] = useState(true)
   const [markers, setMarkers] = useState<any[]>([])
+  const [selected, setSelected] = useState<any>(null)
 
   useEffect(() => {
     api.getMapData().then(setMarkers).catch(() => {}).finally(() => setLoading(false))
@@ -30,27 +34,22 @@ export default function MapPage() {
 
       markers.forEach(m => {
         const el = document.createElement('div')
-        el.innerHTML = `<svg width="36" height="36" viewBox="0 0 36 36"><circle cx="18" cy="18" r="16" fill="#2ecc71" stroke="#1a3a3a" stroke-width="3"/><text x="18" y="22" text-anchor="middle" font-size="16">🐟</text></svg>`
+        el.innerHTML = `<svg width="40" height="40" viewBox="0 0 40 40">
+          <circle cx="20" cy="20" r="17" fill="#20D879" opacity="0.15"/>
+          <circle cx="20" cy="20" r="13" fill="#20D879" opacity="0.3"/>
+          <circle cx="20" cy="20" r="9" fill="#20D879"/>
+          <circle cx="20" cy="20" r="4" fill="#07110F"/>
+        </svg>`
         el.style.cursor = 'pointer'
+        el.style.filter = 'drop-shadow(0 2px 6px rgba(32,216,121,0.4))'
 
-        const topCatch = m.catch_items?.sort((a: any, b: any) => (b.biggest_weight || 0) - (a.biggest_weight || 0))[0]
-        const popupHtml = `
-          <div style="min-width:160px">
-            <div style="font-weight:700;font-size:15px;margin-bottom:4px">🎣 ${m.water_body_name}</div>
-            <div style="font-size:12px;color:#8ba0a0;margin-bottom:6px">${new Date(m.date).toLocaleDateString('ru-RU')}</div>
-            <div style="font-size:13px">🐟 ${m.total_fish_count} рыб</div>
-            ${topCatch ? `<div style="font-size:12px;color:#8ba0a0;margin-top:4px">🏆 ${topCatch.fish_name} ${topCatch.biggest_weight ? topCatch.biggest_weight + ' кг' : ''}</div>` : ''}
-            <button onclick="window.__openRecord(${m.id})" style="margin-top:8px;width:100%;padding:8px;border-radius:8px;border:none;background:#2ecc71;color:#000;font-weight:600;font-size:13px;cursor:pointer">Открыть</button>
-          </div>
-        `
-
-        const popup = new maplibregl.Popup({ offset: 20, closeButton: true })
-          .setHTML(popupHtml)
-
-        new maplibregl.Marker({ element: el })
+        const marker = new maplibregl.Marker({ element: el })
           .setLngLat([m.longitude, m.latitude])
-          .setPopup(popup)
           .addTo(map)
+
+        marker.getElement().addEventListener('click', () => {
+          setSelected(m)
+        })
       })
 
       if (markers.length > 1) {
@@ -60,20 +59,30 @@ export default function MapPage() {
       }
     })
 
-    ;(window as any).__openRecord = (id: number) => navigate(`/record/${id}`)
-    return () => { map?.remove(); delete (window as any).__openRecord }
+    return () => { map?.remove() }
   }, [loading, markers])
 
   if (loading) {
-    return <div className="page"><h2 className="page-title">🗺 МОИ МЕСТА</h2><div className="skeleton" style={{ height: 400 }} /></div>
+    return (
+      <div className="page">
+        <div className="page-header">
+          <h1 className="page-title">Мои места</h1>
+        </div>
+        <div className="skeleton" style={{ height: 400 }} />
+      </div>
+    )
   }
 
   if (markers.length === 0) {
     return (
       <div className="page">
-        <h2 className="page-title">🗺 МОИ МЕСТА</h2>
+        <div className="page-header">
+          <h1 className="page-title">Мои места</h1>
+        </div>
         <div className="empty-state">
-          <div className="empty-state-emoji">🗺</div>
+          <div className="empty-state-icon">
+            <MapPin size={32} />
+          </div>
           <h3 className="empty-state-title">Пока нет отмеченных мест</h3>
           <p className="empty-state-text">Добавьте первую рыбалку, чтобы увидеть её на карте.</p>
         </div>
@@ -81,10 +90,71 @@ export default function MapPage() {
     )
   }
 
+  const topCatch = selected?.catch_items?.sort((a: any, b: any) => (b.biggest_weight || 0) - (a.biggest_weight || 0))[0]
+
   return (
     <div className="page">
-      <h2 className="page-title">🗺 МОИ МЕСТА</h2>
+      <div className="page-header">
+        <h1 className="page-title">Мои места</h1>
+        <p className="page-subtitle">{markers.length} {markers.length === 1 ? 'место' : 'мест'}</p>
+      </div>
       <div ref={mapRef} className="map-container-full" />
+
+      {/* Custom popup card */}
+      {selected && (
+        <>
+          <div className="overlay" style={{ zIndex: 119 }} onClick={() => setSelected(null)} />
+          <div className="map-popup-card">
+            <button className="map-popup-close" onClick={() => setSelected(null)}>
+              <X size={16} />
+            </button>
+            <div className="map-popup-card-header">
+              <div className="map-popup-card-icon">
+                <Anchor size={20} />
+              </div>
+              <div>
+                <div className="map-popup-card-title">{selected.water_body_name}</div>
+                <div className="map-popup-card-sub">
+                  {new Date(selected.date).toLocaleDateString('ru-RU', { day: 'numeric', month: 'long', year: 'numeric' })}
+                </div>
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', gap: 16, marginBottom: 14 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 14 }}>
+                <Fish size={16} style={{ color: 'var(--accent)' }} />
+                <span style={{ fontWeight: 600 }}>{selected.total_fish_count}</span>
+                <span style={{ color: 'var(--text-secondary)', fontSize: 13 }}>рыб</span>
+              </div>
+              {topCatch && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 14 }}>
+                  <Trophy size={16} style={{ color: 'var(--gold)' }} />
+                  <span style={{ color: 'var(--text-secondary)', fontSize: 13 }}>
+                    {topCatch.fish_name}{topCatch.biggest_weight ? ` ${topCatch.biggest_weight} кг` : ''}
+                  </span>
+                </div>
+              )}
+            </div>
+
+            {selected.catch_items?.length > 0 && (
+              <div style={{ fontSize: 13, color: 'var(--text-dim)', marginBottom: 14 }}>
+                Поймано: {selected.catch_items.map((c: any) => c.fish_name).join(' · ')}
+              </div>
+            )}
+
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button className="btn btn-primary" style={{ flex: 1 }} onClick={() => navigate(`/record/${selected.id}`)}>
+                <ChevronRight size={16} /> Открыть
+              </button>
+              <button className="btn btn-outline" style={{ flex: 1 }} onClick={() => {
+                window.open(`https://www.google.com/maps/dir/?api=1&destination=${selected.latitude},${selected.longitude}`, '_blank')
+              }}>
+                <Navigation size={16} /> Маршрут
+              </button>
+            </div>
+          </div>
+        </>
+      )}
     </div>
   )
 }

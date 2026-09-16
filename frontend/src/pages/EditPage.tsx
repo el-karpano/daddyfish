@@ -2,6 +2,10 @@ import { useState, useEffect, useRef } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { api } from '../api'
 import { mapStyle } from '../mapStyle'
+import {
+  ArrowLeft, Calendar, Anchor, MapPin, Fish, MessageSquare,
+  Camera, Plus, X, Weight
+} from 'lucide-react'
 
 const FISH_LIST = [
   'Щука', 'Окунь', 'Судак', 'Сом', 'Карп', 'Карась', 'Лещ', 'Плотва',
@@ -65,7 +69,7 @@ export default function EditPage() {
         center: [lng, lat],
         zoom: 10,
       })
-      markerRef.current = new maplibregl.Marker({ color: '#2ecc71' }).setLngLat([lng, lat]).addTo(map)
+      markerRef.current = new maplibregl.Marker({ color: '#20D879' }).setLngLat([lng, lat]).addTo(map)
       map.on('click', (e: any) => {
         setLat(e.lngLat.lat)
         setLng(e.lngLat.lng)
@@ -146,38 +150,50 @@ export default function EditPage() {
 
   return (
     <div className="page">
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 20 }}>
-        <button className="btn-icon" onClick={() => navigate(-1)}>←</button>
-        <h2 className="page-title" style={{ marginBottom: 0, flex: 1 }}>Редактировать</h2>
+      <div className="back-header">
+        <button className="btn-icon" onClick={() => navigate(-1)}>
+          <ArrowLeft size={20} />
+        </button>
+        <h1 className="back-header-title">Редактировать</h1>
       </div>
 
       <div className="input-group">
-        <label className="input-label">📅 Дата</label>
+        <label className="input-label">
+          <Calendar size={14} style={{ marginRight: 6, verticalAlign: -2 }} /> Дата
+        </label>
         <input className="input" type="date" value={date} onChange={e => setDate(e.target.value)} />
       </div>
 
       <div className="input-group">
-        <label className="input-label">🌊 Водоём</label>
+        <label className="input-label">
+          <Anchor size={14} style={{ marginRight: 6, verticalAlign: -2 }} /> Водоём
+        </label>
         <input className="input" value={waterBody} onChange={e => setWaterBody(e.target.value)} />
       </div>
 
       <div className="input-group">
-        <label className="input-label">📍 Описание места</label>
+        <label className="input-label">
+          <MapPin size={14} style={{ marginRight: 6, verticalAlign: -2 }} /> Описание места
+        </label>
         <textarea className="input" value={placeDesc} onChange={e => setPlaceDesc(e.target.value)} />
       </div>
 
-      <button className="btn btn-secondary" style={{ marginBottom: 12 }} onClick={() => setShowMap(!showMap)}>
-        {showMap ? 'Скрыть карту' : '🗺 Изменить место на карте'}
+      <button className="btn btn-outline" style={{ marginBottom: 12 }} onClick={() => setShowMap(!showMap)}>
+        <MapPin size={16} /> {showMap ? 'Скрыть карту' : 'Изменить место на карте'}
       </button>
 
       {showMap && (
         <>
           <div ref={mapRef} className="map-container" style={{ height: 250 }} />
-          <p style={{ fontSize: 13, color: 'var(--accent)', marginBottom: 12 }}>📍 {lat.toFixed(5)}, {lng.toFixed(5)}</p>
+          <p style={{ fontSize: 13, color: 'var(--accent)', marginBottom: 12, display: 'flex', alignItems: 'center', gap: 6 }}>
+            <MapPin size={14} /> {lat.toFixed(5)}, {lng.toFixed(5)}
+          </p>
         </>
       )}
 
-      <h3 style={{ fontSize: 16, margin: '16px 0 12px' }}>🐟 Улов</h3>
+      <div className="section-title" style={{ marginTop: 20 }}>
+        <Fish size={14} style={{ marginRight: 6, verticalAlign: -2 }} /> Улов
+      </div>
       {catches.map((c, i) => (
         <div key={i} className="catch-row">
           <div className="input-group" style={{ marginBottom: 0 }}>
@@ -195,7 +211,9 @@ export default function EditPage() {
             <label className="input-label">Вес (кг)</label>
             <input className="input" type="number" step="0.1" min="0" value={c.biggest_weight} onChange={e => updateCatch(i, 'biggest_weight', e.target.value)} />
           </div>
-          <button className="btn-icon" style={{ marginBottom: 0 }} onClick={() => removeCatch(i)}>✕</button>
+          <button className="btn-icon" style={{ marginBottom: 0 }} onClick={() => removeCatch(i)}>
+            <X size={16} />
+          </button>
         </div>
       ))}
       {catches.some(c => c.fish_name === 'Другой вид') && (
@@ -207,35 +225,49 @@ export default function EditPage() {
           }} />
         </div>
       )}
-      <button className="btn btn-secondary" onClick={addCatch} style={{ marginBottom: 16 }}>+ Добавить рыбу</button>
+      <button className="btn btn-ghost" onClick={addCatch} style={{ marginBottom: 16, width: 'auto' }}>
+        <Plus size={16} /> Добавить рыбу
+      </button>
 
       <div className="input-group">
-        <label className="input-label">⚖️ Общий вес (кг)</label>
+        <label className="input-label">
+          <Weight size={14} style={{ marginRight: 6, verticalAlign: -2 }} /> Общий вес (кг)
+        </label>
         <input className="input" type="number" step="0.1" min="0" value={totalWeight} onChange={e => setTotalWeight(e.target.value)} />
       </div>
 
       <div className="input-group">
-        <label className="input-label">📝 Комментарий</label>
+        <label className="input-label">
+          <MessageSquare size={14} style={{ marginRight: 6, verticalAlign: -2 }} /> Комментарий
+        </label>
         <textarea className="input" value={comment} onChange={e => setComment(e.target.value)} />
       </div>
 
       <div className="input-group">
-        <label className="input-label">📸 Фотографии</label>
+        <label className="input-label">
+          <Camera size={14} style={{ marginRight: 6, verticalAlign: -2 }} /> Фотографии
+        </label>
         <div className="photo-grid">
           {photos.map(p => (
             <div key={p.id} className="photo-item">
               <img src={p.photo_url} alt="" />
-              <button className="photo-delete" onClick={() => removeExistingPhoto(p.id)}>✕</button>
+              <button className="photo-delete" onClick={() => removeExistingPhoto(p.id)}>
+                <X size={12} />
+              </button>
             </div>
           ))}
           {newPhotoPreviews.map((p, i) => (
             <div key={`new-${i}`} className="photo-item">
               <img src={p} alt="" />
-              <button className="photo-delete" onClick={() => removeNewPhoto(i)}>✕</button>
+              <button className="photo-delete" onClick={() => removeNewPhoto(i)}>
+                <X size={12} />
+              </button>
             </div>
           ))}
           {(photos.length + newPhotos.length) < 10 && (
-            <div className="photo-add" onClick={() => fileRef.current?.click()}>+</div>
+            <div className="photo-add" onClick={() => fileRef.current?.click()}>
+              <Camera size={24} />
+            </div>
           )}
         </div>
         <input ref={fileRef} type="file" accept="image/*" multiple hidden onChange={handlePhotos} />
@@ -244,8 +276,8 @@ export default function EditPage() {
       {error && <p style={{ color: 'var(--danger)', fontSize: 14, marginBottom: 12 }}>{error}</p>}
 
       <div className="btn-group">
-        <button className="btn btn-primary" onClick={save} disabled={saving}>
-          {saving ? 'Сохранение...' : '✓ Сохранить изменения'}
+        <button className="btn btn-primary" onClick={save} disabled={saving} style={{ fontSize: 16, padding: '16px 20px' }}>
+          {saving ? 'Сохранение...' : 'Сохранить изменения'}
         </button>
       </div>
     </div>
