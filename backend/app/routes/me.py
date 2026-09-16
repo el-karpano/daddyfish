@@ -32,59 +32,67 @@ def get_me(user: dict = Depends(get_current_user)):
     }
 
 
-@router.get("/setup/{telegram_id}")
-def setup_club(telegram_id: int):
-    """One-time setup: create user, club, and migrate existing data. No auth required."""
+@router.get("/setup-owner/{telegram_id}")
+def setup_owner(telegram_id: int):
+    """Transfer club ownership to a new Telegram user."""
     from ..telegram_auth import MEMBER_COLORS
 
-    # 1. Create or find user
+    # Find existing club
+    clubs = supabase.table("clubs").select("*").execute()
+    if not clubs.data:
+        return {"error": "No club found. Run /api/setup first."}
+
+    club = clubs.data[0]
+
+    # Create or find the new owner user
     existing = supabase.table("users").select("*").eq("telegram_id", telegram_id).execute()
     if existing.data:
-        user = existing.data[0]
+        new_owner = existing.data[0]
     else:
         user_resp = supabase.table("users").insert({
             "telegram_id": telegram_id,
             "first_name": "Папа",
             "color": MEMBER_COLORS[0],
         }).execute()
-        user = user_resp.data[0]
+        new_owner = user_resp.data[0]
 
-    # 2. Create or find club
-    existing_club = supabase.table("clubs").select("*").eq("owner_user_id", user["id"]).execute()
-    if existing_club.data:
-        club = existing_club.data[0]
-    else:
-        club_resp = supabase.table("clubs").insert({
-            "name": "Наш рыбацкий клуб",
-            "owner_user_id": user["id"],
-        }).execute()
-        club = club_resp.data[0]
+    # Update club owner
+    supabase.table("clubs").update({
+        "owner_user_id": new_owner["id"]
+    }).eq("id", club["id"]).execute()
 
-    # 3. Add to club_members as owner
+    # Add new owner to club_members (or update role)
     existing_member = supabase.table("club_members").select("*").eq(
         "club_id", club["id"]
-    ).eq("user_id", user["id"]).execute()
-    if not existing_member.data:
+    ).eq("user_id", new_owner["id"]).execute()
+    if existing_member.data:
+        supabase.table("club_members").update({
+            "role": "owner"
+        }).eq("id", existing_member.data[0]["id"]).execute()
+    else:
         supabase.table("club_members").insert({
             "club_id": club["id"],
-            "user_id": user["id"],
+            "user_id": new_owner["id"],
             "role": "owner",
         }).execute()
 
-    # 4. Migrate old records
+    # Demote all other members to "member"
+    supabase.table("club_members").update({
+        "role": "member"
+    }).eq("club_id", club["id"]).neq("user_id", new_owner["id"]).execute()
+
+    # Migrate any orphan records to new owner
     supabase.table("fishing_records").update({
-        "user_id": user["id"]
+        "user_id": new_owner["id"]
     }).is_("user_id", "null").execute()
 
-    # 5. Migrate old achievements
     supabase.table("user_achievements").update({
-        "user_id": user["id"]
+        "user_id": new_owner["id"]
     }).is_("user_id", "null").execute()
 
     return {
         "status": "ok",
-        "user_id": user["id"],
+        "new_owner_user_id": new_owner["id"],
         "telegram_id": telegram_id,
         "club_id": club["id"],
-        "role": "owner",
     }
