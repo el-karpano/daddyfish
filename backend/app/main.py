@@ -2,12 +2,40 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import Response
+from contextlib import asynccontextmanager
 from pathlib import Path
+import asyncio
 import os
 
 from .routes import fishing_records, photos, map_data, statistics, achievements, me
 
-app = FastAPI(title="Папина рыбалка")
+
+async def run_bot():
+    """Start Telegram bot polling in background."""
+    from .bot import BOT_TOKEN
+    if not BOT_TOKEN:
+        return
+    try:
+        from aiogram import Bot, Dispatcher
+        from .bot import router as bot_router
+        bot = Bot(token=BOT_TOKEN)
+        dp = Dispatcher()
+        dp.include_router(bot_router)
+        import logging
+        logging.basicConfig(level=logging.INFO)
+        await dp.start_polling(bot)
+    except Exception as e:
+        print(f"Bot error: {e}")
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    task = asyncio.create_task(run_bot())
+    yield
+    task.cancel()
+
+
+app = FastAPI(title="Папина рыбалка", lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
