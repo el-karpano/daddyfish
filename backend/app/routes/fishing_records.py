@@ -1,13 +1,12 @@
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, Query
 from ..database import supabase
 from ..models import FishingRecordCreate, FishingRecordUpdate
-from . import get_current_user
+from . import get_club_member
 
 router = APIRouter(prefix="/api/fishing-records", tags=["fishing-records"])
 
 
-def _enrich_record(record: dict, user_id: int) -> dict:
-    """Add catch_items and photos to a record."""
+def _enrich_record(record: dict) -> dict:
     catches = supabase.table("catch_items").select("*").eq(
         "fishing_record_id", record["id"]
     ).execute()
@@ -19,39 +18,70 @@ def _enrich_record(record: dict, user_id: int) -> dict:
     return record
 
 
+def _attach_owner(record: dict, members_map: dict) -> dict:
+    uid = record.get("user_id")
+    if uid and uid in members_map:
+        m = members_map[uid]
+        record["owner"] = {
+            "id": m["id"],
+            "first_name": m["first_name"],
+            "last_name": m.get("last_name", ""),
+            "color": m.get("color", "#20D879"),
+            "role": m.get("role", "member"),
+        }
+    return record
+
+
 @router.get("")
-def list_records(user_id: int = Depends(get_current_user)):
-    resp = supabase.table("fishing_records").select("*").eq(
-        "telegram_user_id", user_id
-    ).order("date", desc=True).order("created_at", desc=True).execute()
+def list_records(
+    user_id: int = Query(None, description="Filter by user (omit for all club)"),
+    user: dict = Depends(get_club_member),
+):
+    club = user["_club"]
+    from ..telegram_auth import get_club_members
+    members = get_club_members(club["id"])
+    member_ids = [m["id"] for m in members]
+    members_map = {m["id"]: m for m in members}
+
+    query = supabase.table("fishing_records").select("*").in_(
+        "user_id", member_ids if not user_id else [user_id]
+    ).order("date", desc=True).order("created_at", desc=True)
+
+    resp = query.execute()
     records = resp.data or []
     for r in records:
-        catches = supabase.table("catch_items").select("*").eq(
-            "fishing_record_id", r["id"]
-        ).execute()
-        photos = supabase.table("fishing_photos").select("id,fishing_record_id,photo_url,created_at").eq(
-            "fishing_record_id", r["id"]
-        ).execute()
-        r["catch_items"] = catches.data or []
-        r["photos"] = photos.data or []
+        _enrich_record(r)
+        _attach_owner(r, members_map)
     return records
 
 
 @router.get("/{record_id}")
-def get_record(record_id: int, user_id: int = Depends(get_current_user)):
-    resp = supabase.table("fishing_records").select("*").eq(
-        "id", record_id
-    ).eq("telegram_user_id", user_id).execute()
+def get_record(record_id: int, user: dict = Depends(get_club_member)):
+    resp = supabase.table("fishing_records").select("*").eq("id", record_id).execute()
     if not resp.data:
         raise HTTPException(status_code=404, detail="Record not found")
-    return _enrich_record(resp.data[0], user_id)
+
+    record = resp.data[0]
+    club = user["_club"]
+    from ..telegram_auth import get_club_members
+    members = get_club_members(club["id"])
+    member_ids = [m["id"] for m in members]
+
+    if record["user_id"] not in member_ids:
+        raise HTTPException(status_code=404, detail="Record not found")
+
+    members_map = {m["id"]: m for m in members}
+    _enrich_record(record)
+    _attach_owner(record, members_map)
+    return record
 
 
 @router.post("", status_code=201)
-def create_record(data: FishingRecordCreate, user_id: int = Depends(get_current_user)):
+def create_record(data: FishingRecordCreate, user: dict = Depends(get_club_member)):
     total_fish_count = sum(c.quantity for c in data.catch_items)
     record_data = {
-        "telegram_user_id": user_id,
+        "user_id": user["id"],
+        "telegram_user_id": user["telegram_id"],
         "date": data.date.isoformat(),
         "water_body_name": data.water_body_name,
         "latitude": data.latitude,
@@ -72,14 +102,14 @@ def create_record(data: FishingRecordCreate, user_id: int = Depends(get_current_
             "biggest_weight": catch.biggest_weight,
         }).execute()
 
-    return _enrich_record(record, user_id)
+    return _enrich_record(record)
 
 
 @router.put("/{record_id}")
-def update_record(record_id: int, data: FishingRecordUpdate, user_id: int = Depends(get_current_user)):
+def update_record(record_id: int, data: FishingRecordUpdate, user: dict = Depends(get_club_member)):
     existing = supabase.table("fishing_records").select("*").eq(
         "id", record_id
-    ).eq("telegram_user_id", user_id).execute()
+    ).eq("user_id", user["id"]).execute()
     if not existing.data:
         raise HTTPException(status_code=404, detail="Record not found")
 
@@ -109,18 +139,17 @@ def update_record(record_id: int, data: FishingRecordUpdate, user_id: int = Depe
                 "biggest_weight": catch.biggest_weight,
             }).execute()
 
-    return _enrich_record(existing.data[0], user_id)
+    return _enrich_record(existing.data[0])
 
 
 @router.delete("/{record_id}")
-def delete_record(record_id: int, user_id: int = Depends(get_current_user)):
+def delete_record(record_id: int, user: dict = Depends(get_club_member)):
     existing = supabase.table("fishing_records").select("*").eq(
         "id", record_id
-    ).eq("telegram_user_id", user_id).execute()
+    ).eq("user_id", user["id"]).execute()
     if not existing.data:
         raise HTTPException(status_code=404, detail="Record not found")
 
-    # Delete photos from storage
     photos = supabase.table("fishing_photos").select("storage_path").eq(
         "fishing_record_id", record_id
     ).execute()

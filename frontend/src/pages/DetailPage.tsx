@@ -67,6 +67,23 @@ export default function DetailPage() {
         <h1 className="back-header-title">{record.water_body_name}</h1>
       </div>
 
+      {/* Owner info */}
+      {record.owner && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 16 }}>
+          <div style={{
+            width: 32, height: 32, borderRadius: '50%',
+            background: record.owner.color || 'var(--accent)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            color: '#000', fontWeight: 700, fontSize: 14, flexShrink: 0,
+          }}>
+            {record.owner.first_name?.charAt(0)?.toUpperCase()}
+          </div>
+          <span style={{ fontSize: 14, fontWeight: 600, color: 'var(--text)' }}>
+            {record.owner.first_name}{record.owner.role === 'owner' ? ' 👑' : ''}
+          </span>
+        </div>
+      )}
+
       {/* Photo gallery */}
       {photos.length > 0 && (
         <div style={{ position: 'relative', marginBottom: 16 }}>

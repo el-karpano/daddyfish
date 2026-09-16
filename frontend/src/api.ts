@@ -25,9 +25,24 @@ async function request<T>(path: string, options: RequestInit = {}): Promise<T> {
 }
 
 export const api = {
-  getMe: () => request<{ telegram_user_id: number }>('/api/me'),
+  // Auth / me
+  getMe: () => request<any>('/api/me'),
 
-  getRecords: () => request<any[]>('/api/fishing-records'),
+  // Club
+  getClub: () => request<any>('/api/club'),
+  getClubMembers: () => request<any[]>('/api/club/members'),
+  createInvite: () => request<{ token: string }>('/api/club/invite', { method: 'POST' }),
+  removeMember: (memberId: number) =>
+    request<any>(`/api/club/members/${memberId}`, { method: 'DELETE' }),
+
+  // Users
+  getUserProfile: (userId: number) => request<any>(`/api/users/${userId}`),
+
+  // Fishing records
+  getRecords: (userId?: number) => {
+    const params = userId ? `?user_id=${userId}` : '';
+    return request<any[]>(`/api/fishing-records${params}`);
+  },
 
   getRecord: (id: number) => request<any>(`/api/fishing-records/${id}`),
 
@@ -46,6 +61,7 @@ export const api = {
   deleteRecord: (id: number) =>
     request<any>(`/api/fishing-records/${id}`, { method: 'DELETE' }),
 
+  // Photos
   uploadPhoto: (recordId: number, file: File) => {
     const form = new FormData();
     form.append('file', file);
@@ -60,9 +76,16 @@ export const api = {
       method: 'DELETE',
     }),
 
+  // Map
   getMapData: () => request<any[]>('/api/map'),
 
+  // Statistics
   getStatistics: () => request<any>('/api/statistics'),
+  getClubStatistics: () => request<any>('/api/statistics/club'),
 
-  getAchievements: () => request<any[]>('/api/achievements'),
+  // Achievements
+  getAchievements: (userId?: number) => {
+    const path = userId ? `/api/achievements/${userId}` : '/api/achievements';
+    return request<any[]>(path);
+  },
 };

@@ -7,7 +7,7 @@ from pathlib import Path
 import asyncio
 import os
 
-from .routes import fishing_records, photos, map_data, statistics, achievements, me
+from .routes import fishing_records, photos, map_data, statistics, achievements, me, club, users
 
 
 async def run_bot():
@@ -57,6 +57,8 @@ async def no_cache_html(request: Request, call_next):
     return response
 
 app.include_router(me.router)
+app.include_router(club.router)
+app.include_router(users.router)
 app.include_router(fishing_records.router)
 app.include_router(photos.router)
 app.include_router(map_data.router)

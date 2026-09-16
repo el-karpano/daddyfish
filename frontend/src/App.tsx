@@ -2,13 +2,16 @@ import { BrowserRouter, Routes, Route, NavLink, useLocation, useNavigate } from 
 import HomePage from './pages/HomePage'
 import MapPage from './pages/MapPage'
 import HistoryPage from './pages/HistoryPage'
+import FeedPage from './pages/FeedPage'
 import DetailPage from './pages/DetailPage'
 import AddFishingPage from './pages/AddFishingPage'
 import EditPage from './pages/EditPage'
 import StatsPage from './pages/StatsPage'
 import AchievementsPage from './pages/AchievementsPage'
 import ProfilePage from './pages/ProfilePage'
-import { Home, MapPin, Fish, User, Plus } from 'lucide-react'
+import MembersPage from './pages/MembersPage'
+import UserProfilePage from './pages/UserProfilePage'
+import { Home, Newspaper, MapPin, User, Plus } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
 function NavItem({ to, icon: Icon, label }: { to: string; icon: LucideIcon; label: string }) {
@@ -26,7 +29,7 @@ function BottomNav() {
   return (
     <nav className="bottom-nav">
       <NavItem to="/" icon={Home} label="Главная" />
-      <NavItem to="/history" icon={Fish} label="Рыбалки" />
+      <NavItem to="/feed" icon={Newspaper} label="Лента" />
       <button className="nav-add-btn" onClick={() => navigate('/add')}>
         <Plus size={24} strokeWidth={2.5} />
       </button>
@@ -44,6 +47,7 @@ function AppRoutes() {
     <>
       <Routes>
         <Route path="/" element={<HomePage />} />
+        <Route path="/feed" element={<FeedPage />} />
         <Route path="/map" element={<MapPage />} />
         <Route path="/history" element={<HistoryPage />} />
         <Route path="/record/:id" element={<DetailPage />} />
@@ -52,6 +56,8 @@ function AppRoutes() {
         <Route path="/stats" element={<StatsPage />} />
         <Route path="/achievements" element={<AchievementsPage />} />
         <Route path="/profile" element={<ProfilePage />} />
+        <Route path="/members" element={<MembersPage />} />
+        <Route path="/user/:id" element={<UserProfilePage />} />
       </Routes>
       {!hideNav && <BottomNav />}
     </>
