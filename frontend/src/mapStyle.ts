@@ -16,10 +16,10 @@ export const mapStyle: any = {
       type: 'raster',
       source: 'osm',
       paint: {
-        'raster-saturation': -1,
-        'raster-brightness-min': 0.12,
-        'raster-brightness-max': 0.35,
-        'raster-contrast': 0.3
+        'raster-saturation': -0.3,
+        'raster-brightness-min': 0.55,
+        'raster-brightness-max': 0.85,
+        'raster-contrast': 0.1
       }
     }
   ]
