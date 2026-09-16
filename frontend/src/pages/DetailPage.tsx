@@ -4,7 +4,7 @@ import { api } from '../api'
 import { mapStyle } from '../mapStyle'
 import {
   ArrowLeft, MapPin, Navigation, Pencil, Trash2, Calendar,
-  Fish, MessageSquare, ChevronLeft, ChevronRight, Weight
+  Fish, MessageSquare, ChevronLeft, ChevronRight, Weight, X
 } from 'lucide-react'
 
 export default function DetailPage() {
@@ -15,6 +15,7 @@ export default function DetailPage() {
   const [showConfirm, setShowConfirm] = useState(false)
   const [deleting, setDeleting] = useState(false)
   const [photoIdx, setPhotoIdx] = useState(0)
+  const [fullscreen, setFullscreen] = useState(false)
   const mapRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -48,6 +49,22 @@ export default function DetailPage() {
     } catch {} finally {
       setDeleting(false)
     }
+  }
+
+  const openFullscreen = (idx: number) => {
+    setPhotoIdx(idx)
+    setFullscreen(true)
+  }
+
+  const closeFullscreen = () => setFullscreen(false)
+
+  const prevPhoto = (e?: React.MouseEvent) => {
+    e?.stopPropagation()
+    setPhotoIdx(i => i > 0 ? i - 1 : photos.length - 1)
+  }
+  const nextPhoto = (e?: React.MouseEvent) => {
+    e?.stopPropagation()
+    setPhotoIdx(i => i < photos.length - 1 ? i + 1 : 0)
   }
 
   if (loading || !record) {
@@ -87,11 +104,17 @@ export default function DetailPage() {
       {/* Photo gallery */}
       {photos.length > 0 && (
         <div style={{ position: 'relative', marginBottom: 16 }}>
-          <img className="detail-hero-img" src={photos[photoIdx]?.photo_url} alt="" />
+          <img
+            className="detail-hero-img"
+            src={photos[photoIdx]?.photo_url}
+            alt=""
+            onClick={() => openFullscreen(photoIdx)}
+            style={{ cursor: 'pointer' }}
+          />
           {photos.length > 1 && (
             <>
               <button
-                onClick={() => setPhotoIdx(i => i > 0 ? i - 1 : photos.length - 1)}
+                onClick={(e) => { e.stopPropagation(); setPhotoIdx(i => i > 0 ? i - 1 : photos.length - 1) }}
                 style={{
                   position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)',
                   width: 32, height: 32, borderRadius: '50%', background: 'rgba(0,0,0,0.5)',
@@ -102,7 +125,7 @@ export default function DetailPage() {
                 <ChevronLeft size={18} />
               </button>
               <button
-                onClick={() => setPhotoIdx(i => i < photos.length - 1 ? i + 1 : 0)}
+                onClick={(e) => { e.stopPropagation(); setPhotoIdx(i => i < photos.length - 1 ? i + 1 : 0) }}
                 style={{
                   position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)',
                   width: 32, height: 32, borderRadius: '50%', background: 'rgba(0,0,0,0.5)',
@@ -114,12 +137,93 @@ export default function DetailPage() {
               </button>
               <div style={{ display: 'flex', gap: 6, justifyContent: 'center', marginTop: 8 }}>
                 {photos.map((_: any, i: number) => (
+                  <div
+                    key={i}
+                    onClick={() => openFullscreen(i)}
+                    style={{
+                      width: i === photoIdx ? 20 : 6, height: 6, borderRadius: 3,
+                      background: i === photoIdx ? 'var(--accent)' : 'rgba(255,255,255,0.2)',
+                      transition: 'all 0.25s', cursor: 'pointer'
+                    }}
+                  />
+                ))}
+              </div>
+            </>
+          )}
+        </div>
+      )}
+
+      {/* Fullscreen photo viewer */}
+      {fullscreen && photos.length > 0 && (
+        <div
+          onClick={closeFullscreen}
+          style={{
+            position: 'fixed', inset: 0, zIndex: 300,
+            background: 'rgba(0,0,0,0.95)',
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            flexDirection: 'column',
+          }}
+        >
+          <button
+            onClick={closeFullscreen}
+            style={{
+              position: 'absolute', top: 16, right: 16, zIndex: 301,
+              width: 40, height: 40, borderRadius: '50%',
+              background: 'rgba(255,255,255,0.1)', border: 'none',
+              color: '#fff', cursor: 'pointer',
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+            }}
+          >
+            <X size={22} />
+          </button>
+
+          <img
+            src={photos[photoIdx]?.photo_url}
+            alt=""
+            style={{
+              maxWidth: '95vw', maxHeight: '80vh',
+              objectFit: 'contain', borderRadius: 8,
+            }}
+            onClick={(e) => e.stopPropagation()}
+          />
+
+          {photos.length > 1 && (
+            <>
+              <button
+                onClick={prevPhoto}
+                style={{
+                  position: 'absolute', left: 8, top: '50%', transform: 'translateY(-50%)',
+                  width: 44, height: 44, borderRadius: '50%',
+                  background: 'rgba(255,255,255,0.1)', border: 'none',
+                  color: '#fff', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}
+              >
+                <ChevronLeft size={24} />
+              </button>
+              <button
+                onClick={nextPhoto}
+                style={{
+                  position: 'absolute', right: 8, top: '50%', transform: 'translateY(-50%)',
+                  width: 44, height: 44, borderRadius: '50%',
+                  background: 'rgba(255,255,255,0.1)', border: 'none',
+                  color: '#fff', cursor: 'pointer',
+                  display: 'flex', alignItems: 'center', justifyContent: 'center',
+                }}
+              >
+                <ChevronRight size={24} />
+              </button>
+              <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
+                {photos.map((_: any, i: number) => (
                   <div key={i} style={{
-                    width: i === photoIdx ? 20 : 6, height: 6, borderRadius: 3,
-                    background: i === photoIdx ? 'var(--accent)' : 'rgba(255,255,255,0.2)',
+                    width: i === photoIdx ? 24 : 8, height: 8, borderRadius: 4,
+                    background: i === photoIdx ? '#fff' : 'rgba(255,255,255,0.3)',
                     transition: 'all 0.25s'
                   }} />
                 ))}
+              </div>
+              <div style={{ color: 'rgba(255,255,255,0.5)', fontSize: 13, marginTop: 8 }}>
+                {photoIdx + 1} / {photos.length}
               </div>
             </>
           )}

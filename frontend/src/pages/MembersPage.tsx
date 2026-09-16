@@ -120,26 +120,26 @@ export default function MembersPage() {
       {showInvite && inviteLink && (
         <>
           <div className="overlay" onClick={() => setShowInvite(false)} />
-          <div className="confirm-dialog">
-            <h3>Пригласить друга</h3>
-            <p>Отправьте эту ссылку другу, чтобы он вступил в клуб</p>
+          <div className="confirm-dialog" style={{ textAlign: 'left' }}>
+            <h3 style={{ textAlign: 'center' }}>Пригласить друга</h3>
+            <p style={{ textAlign: 'center' }}>Отправьте эту ссылку другу</p>
             <div style={{
               background: 'var(--bg-input)', border: '1px solid var(--border)',
-              borderRadius: 'var(--radius-xs)', padding: '12px',
+              borderRadius: 10, padding: '12px',
               fontSize: 13, color: 'var(--text-secondary)',
               wordBreak: 'break-all', marginBottom: 16,
             }}>
               {inviteLink}
             </div>
-            <div style={{ display: 'flex', gap: 8, marginBottom: 8 }}>
-              <button className="btn btn-secondary" style={{ flex: 1 }} onClick={handleCopy}>
-                <Copy size={16} /> {copied ? 'Скопировано!' : 'Копировать'}
+            <div style={{ display: 'flex', gap: 8 }}>
+              <button className="btn btn-secondary" style={{ flex: 1, width: 'auto' }} onClick={handleCopy}>
+                <Copy size={16} /> {copied ? 'Готово!' : 'Копировать'}
               </button>
-              <button className="btn btn-primary" style={{ flex: 1 }} onClick={handleShare}>
+              <button className="btn btn-primary" style={{ flex: 1, width: 'auto' }} onClick={handleShare}>
                 <Share2 size={16} /> Отправить
               </button>
             </div>
-            <button className="btn btn-ghost" onClick={() => setShowInvite(false)}>Закрыть</button>
+            <button className="btn btn-ghost" style={{ marginTop: 8 }} onClick={() => setShowInvite(false)}>Закрыть</button>
           </div>
         </>
       )}
