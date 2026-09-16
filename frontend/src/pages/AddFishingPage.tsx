@@ -276,8 +276,8 @@ export default function AddFishingPage() {
                 <input className="input" type="number" min="1" placeholder="0" value={c.quantity} onChange={e => updateCatch(i, 'quantity', e.target.value)} />
               </div>
               <div className="input-group" style={{ marginBottom: 0 }}>
-                <label className="input-label">Вес (кг)</label>
-                <input className="input" type="number" step="0.1" min="0" placeholder="—" value={c.biggest_weight} onChange={e => updateCatch(i, 'biggest_weight', e.target.value)} />
+                <label className="input-label">Макс. вес (кг)</label>
+                <input className="input" type="number" step="0.1" min="0" placeholder="Самая крупная" value={c.biggest_weight} onChange={e => updateCatch(i, 'biggest_weight', e.target.value)} />
               </div>
               <button className="btn-icon" style={{ marginBottom: 0 }} onClick={() => removeCatch(i)}>
                 <X size={16} />

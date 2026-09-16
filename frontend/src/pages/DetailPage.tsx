@@ -168,7 +168,7 @@ export default function DetailPage() {
               <div className="catch-list-name">{c.fish_name}</div>
               <div className="catch-list-count">{c.quantity}</div>
               <div className="catch-list-weight">
-                {c.biggest_weight ? `${c.biggest_weight} кг` : '—'}
+                {c.biggest_weight ? `до ${c.biggest_weight} кг` : '—'}
               </div>
             </div>
           ))}
