@@ -2,23 +2,24 @@ export const mapStyle: any = {
   version: 8,
   name: 'Fish Map Dark',
   sources: {
-    'dark': {
+    'osm': {
       type: 'raster',
-      tiles: ['https://basemaps.cartocdn.com/dark_all/{z}/{x}/{y}@2x.png'],
+      tiles: ['https://tile.openstreetmap.org/{z}/{x}/{y}.png'],
       tileSize: 256,
-      attribution: '&copy; <a href="https://carto.com/">CARTO</a> &copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+      attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
       maxzoom: 19
     }
   },
   layers: [
     {
-      id: 'dark',
+      id: 'osm',
       type: 'raster',
-      source: 'dark',
+      source: 'osm',
       paint: {
-        'raster-saturation': -0.1,
-        'raster-brightness-min': 0.5,
-        'raster-brightness-max': 0.85
+        'raster-saturation': -1,
+        'raster-brightness-min': 0.12,
+        'raster-brightness-max': 0.35,
+        'raster-contrast': 0.3
       }
     }
   ]

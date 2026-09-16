@@ -48,26 +48,56 @@ export default function AddFishingPage() {
 
   const initMap = async () => {
     const maplibregl = await import('maplibre-gl')
-    const center: [number, number] = [lng || BARANOVICHI[0], lat || BARANOVICHI[1]]
-    const map = new maplibregl.Map({
-      container: mapRef.current!,
-      style: mapStyle,
-      center,
-      zoom: 6,
-    })
-    map.on('click', (e: any) => {
-      const { lat: la, lng: lo } = e.lngLat
-      setLat(la)
-      setLng(lo)
-      if (markerRef.current) {
-        markerRef.current.setLngLat([lo, la])
-      } else {
-        markerRef.current = new maplibregl.Marker({ color: '#20D879' })
-          .setLngLat([lo, la])
-          .addTo(map)
-      }
-    })
-    mapInstanceRef.current = map
+
+    const createMap = (center: [number, number], zoom: number) => {
+      const map = new maplibregl.Map({
+        container: mapRef.current!,
+        style: mapStyle,
+        center,
+        zoom,
+      })
+      map.addControl(new maplibregl.NavigationControl({ showCompass: false }), 'top-right')
+
+      map.on('click', (e: any) => {
+        const { lat: la, lng: lo } = e.lngLat
+        setLat(la)
+        setLng(lo)
+        if (markerRef.current) {
+          markerRef.current.setLngLat([lo, la])
+        } else {
+          markerRef.current = new maplibregl.Marker({ color: '#20D879' })
+            .setLngLat([lo, la])
+            .addTo(map)
+        }
+      })
+      mapInstanceRef.current = map
+    }
+
+    // Try to center on user's location
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        pos => {
+          const userCenter: [number, number] = [pos.coords.longitude, pos.coords.latitude]
+          setLat(pos.coords.latitude)
+          setLng(pos.coords.longitude)
+          createMap(userCenter, 12)
+          // Auto-place marker at user's position
+          setTimeout(() => {
+            if (mapInstanceRef.current) {
+              markerRef.current = new maplibregl.Marker({ color: '#20D879' })
+                .setLngLat(userCenter)
+                .addTo(mapInstanceRef.current)
+            }
+          }, 300)
+        },
+        () => {
+          createMap([lng || BARANOVICHI[0], lat || BARANOVICHI[1]], 6)
+        },
+        { enableHighAccuracy: true, timeout: 5000 }
+      )
+    } else {
+      createMap([lng || BARANOVICHI[0], lat || BARANOVICHI[1]], 6)
+    }
   }
 
   const addCatch = () => {
